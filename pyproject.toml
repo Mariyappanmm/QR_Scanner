@@ -1,4 +1,26 @@
+[project]
+name = "qr-pass-project"
+version = "0.1.0"
+description = "QR Pass Management Django Application"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.0,<6.1",
+    "asgiref",
+    "channels",
+    "daphne",
+    "whitenoise",
+    "dj-database-url",
+    "psycopg2-binary",
+    "openpyxl",
+    "pillow",
+    "qrcode",
+    "reportlab",
+    "ujson",
+    "cryptography",
+    "cbor2<6",
+]
+
 [tool.uv]
 environments = [
-    "sys_platform == 'linux'",
+    "sys_platform == 'linux' and python_version == '3.12'",
 ]
