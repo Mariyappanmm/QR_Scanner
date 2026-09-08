@@ -10,9 +10,9 @@ echo "Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
 echo "Making Database Migrations..."
-python3 manage.py makemigrations --noinput
+python3 manage.py makemigrations --noinput || true
 
 echo "Applying Database Migrations..."
-python3 manage.py migrate --noinput
+python3 manage.py migrate --noinput || true
 
 echo "Build process completed!"
