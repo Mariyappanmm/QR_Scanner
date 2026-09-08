@@ -5,7 +5,10 @@ python3 -m pip install --break-system-packages --no-warn-script-location -r requ
 echo "Collecting static files..."
 python3 manage.py collectstatic --noinput --clear
 
-echo "Running Database Migrations..."
+echo "Making Database Migrations..."
+python3 manage.py makemigrations --noinput
+
+echo "Applying Database Migrations..."
 python3 manage.py migrate --noinput
 
 echo "Build process completed!"
