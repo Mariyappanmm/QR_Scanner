@@ -11,3 +11,4 @@ qrcode
 reportlab
 ujson
 cryptography
+cbor2<6
