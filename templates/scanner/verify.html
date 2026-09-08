@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Verify Pass - E-QR System{% endblock %}
+
+{% block content %}
+<!-- Full-viewport Background Overlay based on status -->
+<div class="row justify-content-center align-items-center" style="min-height: calc(85vh - 120px);">
+    <div class="col-md-7 col-lg-6 col-xl-5">
+        <div class="card border-0 shadow-lg text-white rounded-4 overflow-hidden {% if status == 'Allowed' %}bg-success-gradient{% else %}bg-danger-gradient{% endif %}" id="result-card">
+            
+            <div class="card-body text-center p-5">
+                <!-- Status icon with float animation -->
+                <div class="mb-4">
+                    {% if status == 'Allowed' %}
+                        <i class="bi bi-check-circle-fill display-1 text-white status-icon"></i>
+                    {% else %}
+                        <i class="bi bi-x-circle-fill display-1 text-white status-icon"></i>
+                    {% endif %}
+                </div>
+                
+                <h1 class="fw-extrabold tracking-tight mb-2">
+                    {% if status == 'Allowed' %}
+                        ENTRY ALLOWED
+                    {% else %}
+                        {{ error_title|default:"ENTRY DENIED" }}
+                    {% endif %}
+                </h1>
+                
+                <h3 class="fw-semibold mb-4 opacity-90">{{ college_name }}</h3>
+                
+                <!-- Inner glass info card -->
+                <div class="status-card text-start mx-auto p-4 mb-4 text-white">
+                    {% if status == 'Allowed' %}
+                        <div class="row mb-2">
+                            <div class="col-5 opacity-75 small">Delegate Number</div>
+                            <div class="col-7 fw-bold">{{ scan_number }} of {{ max_pass }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-5 opacity-75 small">Remaining Passes</div>
+                            <div class="col-7 fw-bold">{{ remaining_pass }}</div>
+                        </div>
+                    {% else %}
+                        <div class="row mb-2">
+                            <div class="col-5 opacity-75 small">Reason</div>
+                            <div class="col-7 fw-bold text-warning">{{ error_message|default:"Limit exceeded" }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-5 opacity-75 small">Passes Limit</div>
+                            <div class="col-7 fw-bold">{{ max_pass }} allowed</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-5 opacity-75 small">Used Passes</div>
+                            <div class="col-7 fw-bold">{{ used_pass }} checked-in</div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row mb-2 border-top pt-2 mt-2 opacity-80 small">
+                        <div class="col-5">Time Logged</div>
+                        <div class="col-7 font-monospace">{{ scan_time }}</div>
+                    </div>
+                    <div class="row opacity-80 small">
+                        <div class="col-5">Volunteer</div>
+                        <div class="col-7">{{ volunteer }}</div>
+                    </div>
+                </div>
+
+                <!-- Timer / Redirect Action -->
+                <div class="mb-3">
+                    <span class="badge bg-white text-dark py-2 px-3 rounded-pill fw-semibold">
+                        Returning to scanner in <span id="countdown">3</span>s...
+                    </span>
+                </div>
+                
+                <a href="{% url 'scanner_home' %}" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="bi bi-camera me-1"></i> Scan Next QR
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Embedded CSS for gradient variables inside card -->
+<style>
+    .bg-success-gradient {
+        background: linear-gradient(135deg, #059669, #10b981) !important;
+    }
+    .bg-danger-gradient {
+        background: linear-gradient(135deg, #dc2626, #f43f5e) !important;
+    }
+    .status-card {
+        background: rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 1rem;
+    }
+    .status-icon {
+        display: inline-block;
+        animation: pulseEffect 1.5s ease-out infinite;
+    }
+    
+    @keyframes pulseEffect {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Play Synthesized Sound via Web Audio helper
+    const scanStatus = "{{ status }}";
+    if (scanStatus === 'Allowed') {
+        playScanSound('success');
+    } else {
+        playScanSound('denied');
+    }
+    
+    // 2. Auto-redirect Countdown timer
+    let count = 3;
+    const countdownEl = document.getElementById('countdown');
+    const interval = setInterval(() => {
+        count--;
+        if (countdownEl) {
+            countdownEl.textContent = count;
+        }
+        if (count <= 0) {
+            clearInterval(interval);
+            window.location.href = "{% url 'scanner_home' %}";
+        }
+    }, 1000);
+});
+</script>
+{% endblock %}

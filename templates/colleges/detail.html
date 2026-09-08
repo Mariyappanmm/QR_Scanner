@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}{{ college.college_name }} - Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'college_list' %}" class="text-decoration-none">Colleges</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">{{ college.college_code }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-1">{{ college.college_name }}</h2>
+        <span
+            class="badge {% if college.status == 'Active' %}badge-active{% else %}badge-inactive{% endif %} px-3 py-1.5 rounded-pill fs-7">
+            {{ college.status }}
+        </span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- College Details Card -->
+    <div class="col-lg-5">
+        <div class="glass-card p-4 rounded-4 border-0 mb-4 h-100 bg-body-tertiary">
+            <h4 class="fw-bold mb-4">College Information</h4>
+
+            <div class="row mb-3">
+                <div class="col-4 text-muted small fw-semibold">College Code</div>
+                <div class="col-8 fw-bold text-primary">{{ college.college_code }}</div>
+            </div>
+
+
+
+            <div class="row mb-3">
+                <div class="col-4 text-muted small fw-semibold">Email Address</div>
+                <div class="col-8"><a href="mailto:{{ college.email }}" class="text-decoration-none">{{ college.email }}</a></div>
+            </div>
+
+
+
+            <div class="row mb-3">
+                <div class="col-4 text-muted small fw-semibold">Created On</div>
+                <div class="col-8 text-secondary">{{ college.created_at|date:"d M Y, h:i A" }}</div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="fw-bold mb-3">Pass Utilization</h5>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small text-muted">Passes Checked In</span>
+                <span class="fw-bold">{{ college.used_pass }} of {{ college.max_pass }}</span>
+            </div>
+            <div class="progress mb-3" style="height: 10px;">
+                {% widthratio college.used_pass college.max_pass 100 as pct %}
+                <div class="progress-bar {% if college.is_limit_reached %}bg-danger{% else %}bg-success{% endif %}"
+                    role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ college.used_pass }}"
+                    aria-valuemin="0" aria-valuemax="{{ college.max_pass }}"></div>
+            </div>
+            <div class="d-flex justify-content-between small text-muted">
+                <span>Remaining passes: {{ college.remaining_passes }}</span>
+                {% if college.is_limit_reached %}
+                <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Limit Reached</span>
+                {% else %}
+                <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Passes Available</span>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 mt-4 pt-2">
+                <a href="{% url 'college_edit' college.pk %}"
+                    class="btn btn-outline-secondary rounded-3 px-3 flex-fill">
+                    <i class="bi bi-pencil-square"></i> Edit Details
+                </a>
+                <a href="{% url 'college_qr_email' college.pk %}"
+                    class="btn btn-warning rounded-3 px-3 flex-fill text-dark border-0 shadow-sm">
+                    <i class="bi bi-envelope-at"></i> Email QR Pass
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pass Preview Card -->
+    <div class="col-lg-7">
+        <div class="glass-card p-4 rounded-4 border-0 mb-4 bg-body-tertiary">
+            <h4 class="fw-bold mb-4">Printable Delegate Pass</h4>
+
+            <!-- Standard Printable Pass Container -->
+            <div class="border rounded-4 bg-body p-4 text-center mx-auto shadow-sm position-relative"
+                style="max-width: 440px;" id="printable-pass">
+                <!-- Watermark background -->
+                <div class="position-absolute top-50 start-50 translate-middle opacity-5 pointer-events-none"
+                    style="z-index: 1;">
+                    <i class="bi bi-qr-code-scan" style="font-size: 15rem;"></i>
+                </div>
+
+                <div class="position-relative" style="z-index: 2;">
+                    <!-- Event Title Header -->
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6 class="text-uppercase tracking-wider text-muted fw-bold mb-1">RAS 2.0</h6>
+                        <h5 class="fw-extrabold text-primary mb-0">VISITOR PASS</h5>
+                    </div>
+
+                    <!-- College Details -->
+                    <div class="mb-4">
+                        <h4 class="fw-bold mb-1">{{ college.college_name }}</h4>
+                        <span
+                            class="badge bg-secondary-subtle text-secondary px-2.5 py-1 text-uppercase tracking-wider fs-9 fw-bold">
+                            COLLEGE CODE: {{ college.college_code }}
+                        </span>
+                    </div>
+
+                    <!-- QR Image Frame -->
+                    <div class="bg-light p-3 d-inline-block rounded-4 border border-dashed mb-3">
+                        {% if college.qr_image %}
+                        <img src="{{ college.qr_image.url }}" alt="Secure QR Code Pass" class="img-fluid"
+                            style="max-width: 200px; height: auto;">
+                        {% else %}
+                        <div class="p-5 text-muted">Generating QR code...</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Limits & Info -->
+                    <div class="row border-top pt-3 mx-1">
+                        <div class="col-6 border-end text-center">
+                            <div class="text-muted fs-8 text-uppercase">Delegate Limit</div>
+                            <div class="fw-bold fs-5 text-secondary">{{ college.max_pass }} Delegates</div>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="text-muted fs-8 text-uppercase">Pass ID</div>
+                            <div class="fw-bold fs-8 font-monospace text-secondary text-truncate px-2">{{ college.qr_token|stringformat:"s"|slice:":18" }}...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'college_qr_download' college.pk %}"
+                    class="btn btn-primary rounded-3 border-0 shadow-sm"
+                    style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+                    <i class="bi bi-download"></i> Download QR
+                </a>
+                <button type="button" class="btn btn-outline-secondary rounded-3" onclick="window.print();">
+                    <i class="bi bi-printer"></i> Print Pass
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Entry Scan Logs -->
+<div class="glass-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+    <div class="p-4 border-bottom bg-body-tertiary">
+        <h5 class="fw-bold mb-0">Recent Entry Attempts</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4">Scan Time</th>
+                    <th scope="col" class="text-center">Sequence</th>
+                    <th scope="col">Scanned By</th>
+                    <th scope="col">IP Address</th>
+                    <th scope="col">Device / Device Info</th>
+                    <th scope="col" class="text-center">Status</th>
+                    <th scope="col" class="pe-4">Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if scan_logs %}
+                {% for log in scan_logs %}
+                <tr>
+                    <td class="ps-4">{{ log.scan_time|date:"d M, h:i A" }}</td>
+                    <td class="text-center fw-semibold text-muted">
+                        {% if log.status == 'Allowed' %}{{ log.scan_number }}{% else %}-{% endif %}
+                    </td>
+                    <td>{{ log.scanned_by.first_name|default:log.scanned_by.username|default:"System" }}</td>
+                    <td><small class="font-monospace text-muted">{{ log.ip_address }}</small></td>
+                    <td><small class="text-truncate d-inline-block" style="max-width: 150px;"
+                            title="{{ log.scanner_device }}">{{ log.scanner_device }}</small></td>
+                    <td class="text-center">
+                        {% if log.status == 'Allowed' %}
+                        <span
+                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">Allowed</span>
+                        {% else %}
+                        <span
+                            class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">Denied</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4 text-muted"><small>{{ log.remarks|default:"" }}</small></td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        No entry scans recorded for this college yet.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #printable-pass,
+        #printable-pass * {
+            visibility: visible;
+        }
+
+        #printable-pass {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: none !important;
+            border: 2px solid #000 !important;
+            border-radius: 1.5rem !important;
+            background: #fff !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - E-QR Pass{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <!-- Header -->
+            <div class="p-4 border-bottom bg-body-tertiary">
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'college_list' %}" class="btn btn-outline-secondary btn-sm rounded-circle p-1 d-inline-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <h4 class="fw-bold mb-0">{{ title }}</h4>
+                </div>
+            </div>
+            
+            <!-- Form Body -->
+            <div class="p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <small class="d-block">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- College Name -->
+                    <div class="mb-3">
+                        <label for="{{ form.college_name.id_for_label }}" class="form-label fw-semibold">College Name</label>
+                        {{ form.college_name }}
+                        {% if form.college_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.college_name.errors %}
+                                    <small class="d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <!-- College Code -->
+                        <div class="col-md-6">
+                            <label for="{{ form.college_code.id_for_label }}" class="form-label fw-semibold">College Code</label>
+                            {{ form.college_code }}
+                            {% if form.college_code.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.college_code.errors %}
+                                        <small class="d-block">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}
+                                        <small class="d-block">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <!-- Max Pass -->
+                        <div class="col-md-6">
+                            <label for="{{ form.max_pass.id_for_label }}" class="form-label fw-semibold">Delegate Limit (Passes)</label>
+                            {{ form.max_pass }}
+                            {% if form.max_pass.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.max_pass.errors %}
+                                        <small class="d-block">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text small">Standard is 2 delegates per college.</div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.status.errors %}
+                                        <small class="d-block">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'college_list' %}" class="btn btn-outline-secondary rounded-3 px-4 flex-fill">Cancel</a>
+                        <button type="submit" class="btn btn-primary rounded-3 px-4 flex-fill border-0 shadow-sm" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+                            Save College
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

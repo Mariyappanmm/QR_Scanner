@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hackathon E-QR Pass{% endblock %} - Event Manager</title>
+    
+    <!-- Bootstrap 5 CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Ambient Cinematic Background Elements -->
+    <div class="ambient-background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-body-tertiary">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard' %}">
+                <i class="bi bi-qr-code-scan fs-4 text-primary"></i>
+                <span>E-QR Pass</span>
+            </a>
+            
+            {% if user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                    {% if user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'colleges' in request.resolver_match.view_name %}active{% endif %}" href="{% url 'college_list' %}">
+                            <i class="bi bi-building me-1"></i> Colleges
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'reports_home' %}active{% endif %}" href="{% url 'reports_home' %}">
+                            <i class="bi bi-file-earmark-bar-graph me-1"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'audit_logs' %}active{% endif %}" href="{% url 'audit_logs' %}">
+                            <i class="bi bi-shield-check me-1"></i> Audit Logs
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'scanner_home' %}active{% endif %}" href="{% url 'scanner_home' %}">
+                            <i class="bi bi-camera me-1"></i> Scanner
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Right Navbar Settings -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Light/Dark Mode Switcher -->
+                    <button class="btn btn-link nav-link p-2" id="theme-toggle" type="button" aria-label="Toggle theme">
+                        <i class="bi bi-sun-fill text-warning fs-5" id="theme-icon-light"></i>
+                        <i class="bi bi-moon-stars-fill text-primary fs-5 d-none" id="theme-icon-dark"></i>
+                    </button>
+                    
+                    <!-- User Account Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-user bi-person-circle fs-5"></i>
+                            <span>{{ user.first_name|default:user.username }}</span>
+                            <span class="badge rounded-pill bg-primary fs-9">{{ user.get_role_display }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li>
+                                <form action="{% url 'logout' %}" method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item text-danger d-flex align-items-center gap-2" type="submit">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Light/Dark Mode for Non-auth pages -->
+            <button class="btn btn-link nav-link p-2 ms-auto" id="theme-toggle" type="button">
+                <i class="bi bi-sun-fill text-warning fs-5" id="theme-icon-light"></i>
+                <i class="bi bi-moon-stars-fill text-primary fs-5 d-none" id="theme-icon-dark"></i>
+            </button>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container-fluid px-4 py-4">
+        <!-- Toast Notification Area -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+            <div id="liveToast" class="toast align-items-center border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        <i id="toastIcon" class="bi fs-5"></i>
+                        <span id="toastMessage"></span>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Area rendered dynamically as Toasts -->
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer border-top py-3 bg-body-tertiary">
+        <div class="container-fluid px-4 text-center text-muted">
+            <small>&copy; 2026 Hackathon E-QR Delegate Pass Management. Built with Django & WebSockets.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global Main JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    <!-- Render Django Messages as Live Toasts -->
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            {% for message in messages %}
+                window.showToast("{{ message|escapejs }}", "{{ message.tags }}");
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

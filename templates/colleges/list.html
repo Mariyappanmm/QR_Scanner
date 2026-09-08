@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}Colleges List - E-QR Pass{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="fw-bold mb-1">Colleges & Delegate Passes</h2>
+        <p class="text-muted mb-0">Manage colleges, monitor pass utilisation, and dispatch entry passes.</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex gap-2 justify-content-md-end flex-wrap">
+        <a href="{% url 'college_create' %}" class="btn btn-primary d-flex align-items-center gap-2 rounded-3 border-0 shadow-sm" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+            <i class="bi bi-plus-circle"></i> Add College
+        </a>
+        <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2 rounded-3" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-file-earmark-excel"></i> Import Excel
+        </button>
+        <a href="{% url 'colleges_export_excel' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2 rounded-3">
+            <i class="bi bi-download"></i> Export Excel
+        </a>
+        <a href="{% url 'colleges_bulk_email_qr' %}" class="btn btn-warning d-flex align-items-center gap-2 rounded-3 border-0 text-dark shadow-sm" onclick="return confirm('Are you sure you want to send secure E-QR Passes to all active colleges? This will dispatch emails to all registered emails.');">
+            <i class="bi bi-envelope-at"></i> Email QR to All
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filtering -->
+<div class="glass-card p-3 mb-4 rounded-3 border-0 shadow-sm bg-body-tertiary">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-7">
+            <div class="input-group">
+                <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="form-control border-start-0" placeholder="Search by name, code, or email..." value="{{ q }}">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">-- All Statuses --</option>
+                <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if status == 'Inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-secondary rounded-3 border-0 shadow-sm">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Table Card -->
+<div class="glass-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4">Code</th>
+                    <th scope="col">College Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col" class="text-center">Pass Utilization</th>
+                    <th scope="col" class="text-center">Status</th>
+                    <th scope="col" class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if page_obj %}
+                    {% for college in page_obj %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">{{ college.college_code }}</td>
+                        <td>
+                            <a href="{% url 'college_detail' college.pk %}" class="fw-semibold text-decoration-none text-body">
+                                {{ college.college_name }}
+                            </a>
+                        </td>
+                        <td><small>{{ college.email }}</small></td>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <div class="progress w-50" style="height: 6px;" title="Used: {{ college.used_pass }} / Max: {{ college.max_pass }}">
+                                    {% widthratio college.used_pass college.max_pass 100 as pct %}
+                                    <div class="progress-bar {% if college.is_limit_reached %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ college.used_pass }}" aria-valuemin="0" aria-valuemax="{{ college.max_pass }}"></div>
+                                </div>
+                                <span class="small fw-semibold">{{ college.used_pass }}/{{ college.max_pass }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if college.status == 'Active' %}
+                                <span class="badge badge-active rounded-pill px-2.5 py-1">Active</span>
+                            {% else %}
+                                <span class="badge badge-inactive rounded-pill px-2.5 py-1">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                <!-- View Details -->
+                                <a href="{% url 'college_detail' college.pk %}" class="btn btn-sm btn-outline-primary border-0 rounded-3 p-1.5" title="View Details" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-eye fs-5"></i>
+                                </a>
+                                <!-- Edit Details -->
+                                <a href="{% url 'college_edit' college.pk %}" class="btn btn-sm btn-outline-secondary border-0 rounded-3 p-1.5" title="Edit Details" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-pencil fs-5"></i>
+                                </a>
+                                <!-- Download QR -->
+                                <a href="{% url 'college_qr_download' college.pk %}" class="btn btn-sm btn-outline-dark border-0 rounded-3 p-1.5" title="Download QR" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-qr-code fs-5"></i>
+                                </a>
+                                <!-- Email QR Pass -->
+                                <a href="{% url 'college_qr_email' college.pk %}" class="btn btn-sm btn-outline-warning border-0 rounded-3 p-1.5" title="Email QR Pass" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-envelope fs-5"></i>
+                                </a>
+                                <!-- Delete -->
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-3 p-1.5" data-bs-toggle="modal" data-bs-target="#deleteModal{{ college.pk }}" title="Delete" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-trash fs-5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder2-open display-4 d-block mb-3"></i>
+                            <h5>No colleges registered yet</h5>
+                            <p class="small">Add a college manually or import from an Excel sheet to begin.</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mb-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link rounded-3 me-1" href="?q={{ q }}&status={{ status }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><a class="page-link rounded-3 me-1" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item"><a class="page-link rounded-3 me-1" href="?q={{ q }}&status={{ status }}&page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link rounded-3" href="?q={{ q }}&status={{ status }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Import Excel Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{% url 'colleges_import_excel' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold" id="importModalLabel">Import Colleges from Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        Upload an Excel sheet (.xlsx) with columns: <strong>Name, Code, Contact, Email, Phone, MaxPass</strong> (row 1 is header).
+                    </p>
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label fw-semibold">Select Excel File</label>
+                        <input type="file" name="excel_file" class="form-control" id="excelFile" accept=".xlsx" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 border-0" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+                        Import Records
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if page_obj %}
+    {% for college in page_obj %}
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal{{ college.pk }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <p>Are you sure you want to delete the college <strong>{{ college.college_name }}</strong>?</p>
+                    <div class="alert alert-danger small py-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        <div>Warning: Deleting this college will delete all associated scan logs. This action is irreversible.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{% url 'college_delete' college.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-3">Confirm Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}

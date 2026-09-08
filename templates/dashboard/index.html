@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6 animate-fade-in-up">
+        <h2 class="cinematic-title mb-1">REGIONAL AI SUMMIT 2.0 QR PASS</h2>
+        <p class="text-muted mb-0">Real-time delegate registrations and entry tracking.</p>
+    </div>
+    <div class="col-md-6 text-md-end mt-2 mt-md-0 animate-fade-in-up" id="live-status-indicator">
+        <!-- Live status gets filled by JS -->
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1">
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span> Loading sync...
+        </span>
+    </div>
+</div>
+
+<!-- Stats Cards Grid -->
+<div class="row g-3 mb-4">
+    <!-- Total Colleges -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-1">
+            <div class="text-primary mb-2"><i class="bi bi-building fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Total Colleges</div>
+            <h3 class="fw-bold mb-0" id="count-colleges">{{ total_colleges }}</h3>
+        </div>
+    </div>
+    <!-- Total Passes -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-2">
+            <div class="text-secondary mb-2"><i class="bi bi-qr-code fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Total Passes</div>
+            <h3 class="fw-bold mb-0" id="count-total-passes">{{ total_passes }}</h3>
+        </div>
+    </div>
+    <!-- Used Passes -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-3">
+            <div class="text-success mb-2"><i class="bi bi-person-check fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Used Passes</div>
+            <h3 class="fw-bold mb-0" id="count-used">{{ used_passes }}</h3>
+        </div>
+    </div>
+    <!-- Remaining Passes -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-4">
+            <div class="text-info mb-2"><i class="bi bi-person-dash fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Remaining Passes</div>
+            <h3 class="fw-bold mb-0" id="count-remaining">{{ remaining_passes }}</h3>
+        </div>
+    </div>
+    <!-- Rejected Entries -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-5">
+            <div class="text-danger mb-2"><i class="bi bi-shield-slash fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Rejected Entries</div>
+            <h3 class="fw-bold mb-0" id="count-rejected">{{ rejected_entries }}</h3>
+        </div>
+    </div>
+    <!-- Today's Entries -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="glass-card p-3 rounded-3 text-center border-0 bg-body-tertiary animate-fade-in-up delay-6">
+            <div class="text-warning mb-2"><i class="bi bi-calendar-event fs-3"></i></div>
+            <div class="text-muted fs-8 text-uppercase fw-semibold mb-1">Today's Entries</div>
+            <h3 class="fw-bold mb-0" id="count-today">{{ today_entries }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Pie Chart (Allowed vs Denied) -->
+    <div class="col-md-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary animate-fade-in-up delay-4">
+            <h5 class="fw-bold mb-3">Allowed vs Denied</h5>
+            <div style="position: relative; height: 230px;">
+                <canvas id="allowedDeniedChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Doughnut Chart (Pass Utilization) -->
+    <div class="col-md-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary animate-fade-in-up delay-5">
+            <h5 class="fw-bold mb-3">Pass Utilization</h5>
+            <div style="position: relative; height: 230px;">
+                <canvas id="passUtilChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bar Chart (Top Colleges by Attendance) -->
+    <div class="col-md-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary animate-fade-in-up delay-6">
+            <h5 class="fw-bold mb-3">Top Colleges Entries</h5>
+            <div style="position: relative; height: 230px;">
+                <canvas id="topCollegesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live entry table -->
+<div class="glass-card shadow-sm border-0 rounded-4 overflow-hidden mb-4 bg-body-tertiary animate-fade-in-up delay-7">
+    <div class="p-4 border-bottom bg-body-tertiary">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="fw-bold mb-0"><i class="bi bi-activity text-primary me-2"></i> Live Entry Attendance Feed</h5>
+            </div>
+            <div class="col-auto text-muted small">
+                Updates automatically
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4">Time</th>
+                    <th scope="col">College</th>
+                    <th scope="col" class="text-center">Status</th>
+                    <th scope="col">Volunteer</th>
+                    <th scope="col" class="text-center pe-4">Remaining Passes</th>
+                </tr>
+            </thead>
+            <tbody id="live-entry-body">
+                {% if recent_scans %}
+                    {% for log in recent_scans %}
+                    <tr style="transition: background-color 1.5s ease;">
+                        <td class="ps-4 fw-semibold">{{ log.scan_time|date:"h:i A" }}</td>
+                        <td class="fw-bold">{{ log.college.college_name }} <small class="text-muted">({{ log.college.college_code }})</small></td>
+                        <td class="text-center">
+                            {% if log.status == 'Allowed' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">Allowed</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">Denied</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.scanned_by.first_name|default:log.scanned_by.username|default:"System" }}</td>
+                        <td class="text-center pe-4 fw-bold">
+                            {% if log.status == 'Allowed' %}
+                                {{ log.college.remaining_passes }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="empty-row-msg">
+                        <td colspan="5" class="text-center py-4 text-muted">No entry attempts recorded today.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Dashboard sync logic -->
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

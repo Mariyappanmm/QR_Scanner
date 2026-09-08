@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Mobile E-QR Scanner{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: calc(80vh - 100px);">
+    <div class="col-md-6 col-lg-5 text-center">
+        <h3 class="fw-bold mb-1">Scan Delegate Pass</h3>
+        <p class="text-muted small mb-4">Position the college E-QR pass inside the camera frame below.</p>
+        
+        <!-- Scanner Frame Container -->
+        <div class="scanner-container mb-4">
+            <!-- Laser Animation Overlay -->
+            <div class="scanner-laser"></div>
+            <!-- Video scanner viewport target -->
+            <div id="reader" style="width: 100%; border: none;"></div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+            <span class="spinner-border spinner-border-sm text-primary" role="status" id="camera-spinner"></span>
+            <span class="small text-muted" id="camera-status">Initializing camera streams...</span>
+        </div>
+
+        <div id="camera-instructions" class="small text-secondary px-3 py-2 bg-body-tertiary rounded-3 glass-card d-none">
+            <i class="bi bi-info-circle me-1"></i> Make sure to allow camera access permissions if prompted by your mobile browser.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- html5-qrcode CDN -->
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cameraSpinner = document.getElementById('camera-spinner');
+    const cameraStatus = document.getElementById('camera-status');
+    const instructions = document.getElementById('camera-instructions');
+    
+    // Check if user is logged in
+    const scannerUrlPrefix = window.location.origin + '/scanner/verify/';
+    
+    // Initialize html5-qrcode
+    const html5QrcodeScanner = new Html5Qrcode("reader");
+
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+        // Stop scanning to prevent multiple triggers
+        html5QrcodeScanner.stop().then(() => {
+            cameraStatus.textContent = "QR Scanned! Redirecting to verification...";
+            
+            // Try to extract UUID token
+            let token = decodedText;
+            if (decodedText.includes('/scanner/verify/')) {
+                // Scanned full URL
+                const parts = decodedText.split('/scanner/verify/');
+                if (parts.length > 1) {
+                    token = parts[1].replace('/', ''); // get the token part
+                }
+            } else if (decodedText.startsWith('http')) {
+                // Scanned a general URL containing UUID at the end
+                const parts = decodedText.split('/');
+                token = parts[parts.length - 1] || parts[parts.length - 2];
+            }
+            
+            // Redirect browser to the validation page
+            window.location.href = `/scanner/verify/${token}/`;
+        }).catch(err => {
+            console.error("Failed to stop scanning.", err);
+            // Fallback redirect
+            window.location.href = `/scanner/verify/${decodedText}/`;
+        });
+    };
+
+    const config = { 
+        fps: 10, 
+        qrbox: function(width, height) {
+            // Make qrbox responsive
+            const minSize = Math.min(width, height);
+            const boxSize = Math.floor(minSize * 0.7);
+            return { width: boxSize, height: boxSize };
+        },
+        aspectRatio: 1.0
+    };
+
+    // Automatically start scanning with back camera
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length > 0) {
+            // Check if back camera is available
+            let cameraId = devices[0].id;
+            for (let i = 0; i < devices.length; i++) {
+                if (devices[i].label.toLowerCase().includes('back') || devices[i].label.toLowerCase().includes('rear')) {
+                    cameraId = devices[i].id;
+                    break;
+                }
+            }
+            
+            html5QrcodeScanner.start(
+                cameraId, 
+                config, 
+                qrCodeSuccessCallback,
+                (errorMessage) => {
+                    // Verbose scan failures ignored to avoid flooding console
+                }
+            ).then(() => {
+                cameraSpinner.classList.add('d-none');
+                cameraStatus.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-camera-video-fill"></i> Scanner Active</span>';
+            }).catch(err => {
+                cameraSpinner.classList.add('d-none');
+                cameraStatus.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Camera start failed</span>';
+                instructions.classList.remove('d-none');
+            });
+        } else {
+            cameraSpinner.classList.add('d-none');
+            cameraStatus.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> No cameras detected</span>';
+        }
+    }).catch(err => {
+        cameraSpinner.classList.add('d-none');
+        cameraStatus.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Camera permission denied</span>';
+        instructions.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

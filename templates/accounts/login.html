@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Login - Hackathon E-QR System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: calc(80vh - 100px);">
+    <div class="col-md-5 col-lg-4">
+        <div class="glass-card shadow-lg border-0 overflow-hidden rounded-4">
+            <!-- Form Header with Gradient background -->
+            <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+                <i class="bi bi-qr-code-scan display-4 mb-2"></i>
+                <h3 class="fw-bold mb-0">Event Pass System</h3>
+                <p class="small opacity-75 mb-0">Hackathon Delegate entry verification</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="p-4 bg-body-tertiary">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <small class="d-block">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Username field -->
+                    <div class="mb-3">
+                        <label for="username_field" class="form-label fw-semibold text-secondary">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                            {{ form.username }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Password field -->
+                    <div class="mb-4">
+                        <label for="password_field" class="form-label fw-semibold text-secondary">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                            {{ form.password }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100 py-2.5 rounded-3 fw-bold border-0 shadow-sm" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));">
+                        Sign In <i class="bi bi-box-arrow-in-right ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

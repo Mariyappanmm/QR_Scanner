@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Reports & Exports{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <h2 class="fw-bold mb-1">Reports & Analytics Exports</h2>
+        <p class="text-muted mb-0">Download data backups, check-in logs, and print-ready delegate passes.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Card 1: Bulk College Passes (PDF) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary d-flex flex-column justify-content-between">
+            <div>
+                <div class="text-danger mb-3"><i class="bi bi-file-earmark-pdf fs-1"></i></div>
+                <h5 class="fw-bold mb-2">Printable QR Passes Booklet</h5>
+                <p class="text-muted small">Generates a multi-page PDF document containing entry passes for all active colleges (one college pass per page) containing their secure QR code, contact information, and event instructions.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_pdf_passes' %}" class="btn btn-danger w-100 rounded-3 border-0 shadow-sm">
+                    <i class="bi bi-download"></i> Download Booklet (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Daily Attendance Summary (PDF) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary d-flex flex-column justify-content-between">
+            <div>
+                <div class="text-danger mb-3"><i class="bi bi-file-earmark-bar-graph fs-1"></i></div>
+                <h5 class="fw-bold mb-2">Daily Attendance Executive Summary</h5>
+                <p class="text-muted small">Generates a formatted PDF report summarizing current delegate entrance numbers, overall college pass utilization, and a chronological listing of the most recent entry checkpoints.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_pdf_report' %}" class="btn btn-outline-danger w-100 rounded-3">
+                    <i class="bi bi-download"></i> Download Report (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Complete Attendance Logs (Excel) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary d-flex flex-column justify-content-between">
+            <div>
+                <div class="text-success mb-3"><i class="bi bi-file-earmark-spreadsheet fs-1"></i></div>
+                <h5 class="fw-bold mb-2">Complete Attendance Scan Logs</h5>
+                <p class="text-muted small">Downloads an Excel spreadsheet (.xlsx) listing every entry scan attempt logged at the gates. Includes timestamps, college codes, scanned-by volunteer info, user agent, IP address, and status.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_attendance_excel' %}" class="btn btn-success w-100 rounded-3 border-0 shadow-sm">
+                    <i class="bi bi-download"></i> Download Logs (Excel)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Rejected Scan Attempts (Excel) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary d-flex flex-column justify-content-between">
+            <div>
+                <div class="text-success mb-3"><i class="bi bi-file-earmark-excel fs-1"></i></div>
+                <h5 class="fw-bold mb-2">Rejected Scan Attempts Audit Log</h5>
+                <p class="text-muted small">Downloads an Excel sheet tracking failed entry checks (e.g., colleges exceeding their 2-delegate limit, or inactive credentials). Essential for security reviews at the entrance gates.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_rejected_excel' %}" class="btn btn-outline-success w-100 rounded-3">
+                    <i class="bi bi-download"></i> Download Audit Logs (Excel)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 5: Volunteer Performance Metrics (Excel) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 rounded-4 border-0 h-100 bg-body-tertiary d-flex flex-column justify-content-between">
+            <div>
+                <div class="text-success mb-3"><i class="bi bi-people fs-1"></i></div>
+                <h5 class="fw-bold mb-2">Volunteer Operator Metrics</h5>
+                <p class="text-muted small">Downloads an Excel log summarizing total scan counts handled by each volunteer operator account. Shows total processed, total allowed, and total denied scans for gate check audit.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_volunteer_excel' %}" class="btn btn-outline-success w-100 rounded-3">
+                    <i class="bi bi-download"></i> Download Summary (Excel)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
